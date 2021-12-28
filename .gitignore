@@ -8,3 +8,30 @@
 资料/资料/常用的Spring Boot坐标.txt
 资料/资料/CustomerMapper.xml
 资料.zip
+Spring Boot整合Shiro/account.sql
+Spring Boot整合Shiro/Shiro.md
+Spring Boot整合Shiro/Shiro.pdf
+Spring Boot整合Shiro/springboot-shiro/.gitignore
+Spring Boot整合Shiro/springboot-shiro/mvnw
+Spring Boot整合Shiro/springboot-shiro/mvnw.cmd
+Spring Boot整合Shiro/springboot-shiro/pom.xml
+Spring Boot整合Shiro/springboot-shiro/.mvn/wrapper/maven-wrapper.jar
+Spring Boot整合Shiro/springboot-shiro/.mvn/wrapper/maven-wrapper.properties
+Spring Boot整合Shiro/springboot-shiro/.mvn/wrapper/MavenWrapperDownloader.java
+Spring Boot整合Shiro/springboot-shiro/src/main/java/com/southwind/SpringbootShiroApplication.java
+Spring Boot整合Shiro/springboot-shiro/src/main/java/com/southwind/config/ShiroConfig.java
+Spring Boot整合Shiro/springboot-shiro/src/main/java/com/southwind/controller/AccountController.java
+Spring Boot整合Shiro/springboot-shiro/src/main/java/com/southwind/entity/Account.java
+Spring Boot整合Shiro/springboot-shiro/src/main/java/com/southwind/mapper/AccountMapper.java
+Spring Boot整合Shiro/springboot-shiro/src/main/java/com/southwind/realm/AccoutRealm.java
+Spring Boot整合Shiro/springboot-shiro/src/main/java/com/southwind/service/AccountService.java
+Spring Boot整合Shiro/springboot-shiro/src/main/java/com/southwind/service/impl/AccountServiceImpl.java
+Spring Boot整合Shiro/springboot-shiro/src/main/resources/application.yml
+Spring Boot整合Shiro/springboot-shiro/src/main/resources/templates/administrator.html
+Spring Boot整合Shiro/springboot-shiro/src/main/resources/templates/index.html
+Spring Boot整合Shiro/springboot-shiro/src/main/resources/templates/login.html
+Spring Boot整合Shiro/springboot-shiro/src/main/resources/templates/main.html
+Spring Boot整合Shiro/springboot-shiro/src/main/resources/templates/manage.html
+Spring Boot整合Shiro/springboot-shiro/src/test/java/com/southwind/SpringbootShiroApplicationTests.java
+Spring Boot整合Shiro/springboot-shiro/src/test/java/com/southwind/mapper/AccountMapperTest.java
+Spring Boot整合Shiro/springboot-shiro/src/test/java/com/southwind/service/AccountServiceTest.java
