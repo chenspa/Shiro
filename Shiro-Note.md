@@ -1,10 +1,11 @@
 # Shiro
+> [参考链接](https://www.bilibili.com/video/BV16C4y187S9?spm_id_from=333.999.0.0)  by 楠哥教你学Java
 
 ## 一、官方文档
 `https://shiro.apache.org/documentation.html`
 
 ## 二、环境
-~~~
+~~~java
 <!--        引入shiro-->
 <dependency>
     <groupId>org.apache.shiro</groupId>
