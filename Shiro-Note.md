@@ -11,298 +11,153 @@
     <artifactId>shiro-core</artifactId>
     <version>1.7.1</version>
 </dependency>
+<dependencies>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-thymeleaf</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+
+    <dependency>
+        <groupId>org.projectlombok</groupId>
+        <artifactId>lombok</artifactId>
+        <optional>true</optional>
+    </dependency>
+
+    <dependency>
+        <groupId>org.apache.shiro</groupId>
+        <artifactId>shiro-spring</artifactId>
+        <version>1.5.3</version>
+    </dependency>
+
+    <dependency>
+        <groupId>mysql</groupId>
+        <artifactId>mysql-connector-java</artifactId>
+    </dependency>
+
+    <dependency>
+        <groupId>com.baomidou</groupId>
+        <artifactId>mybatis-plus-boot-starter</artifactId>
+        <version>3.3.1.tmp</version>
+    </dependency>
+
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-test</artifactId>
+        <scope>test</scope>
+        <exclusions>
+            <exclusion>
+                <groupId>org.junit.vintage</groupId>
+                <artifactId>junit-vintage-engine</artifactId>
+            </exclusion>
+        </exclusions>
+    </dependency>
+
+    <dependency>
+    <groupId>com.github.theborakompanioni</groupId>
+    <artifactId>thymeleaf-extras-shiro</artifactId>
+    <version>2.0.0</version>
+    </dependency>
+</dependencies>
 
 ~~~
 
-## 三、shiro 认证
+## 三、Shiro核心组件
+**用户、角色、权限**
 
- - 1、 MD5 的实现
+会给角色赋予权限，给用户赋予角色
 
-`CustomerMd5Realm`
-~~~
-public class CustomerMd5Realm extends AuthorizingRealm {
-    @Override
-    protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principalCollection) {
-        return null;
-    }
+1、UsernamePasswordToken，Shiro 用来封装用户登录信息，使用用户的登录信息来创建令牌 Token。
 
-    //认证
-    @Override
-    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authenticationToken) throws AuthenticationException {
-        String principal = (String) authenticationToken.getPrincipal();
-        if ("root".equals(principal)) {
-            return new SimpleAuthenticationInfo(principal, "e10adc3949ba59abbe56e057f20f883e", this.getName());
-        }
+2、SecurityManager，Shiro 的核心部分，负责安全认证和授权。
 
-        return null;
-    }
+3、Suject，Shiro 的一个抽象概念，包含了用户信息。
+
+4、Realm，开发者自定义的模块，根据项目的需求，验证和授权的逻辑全部写在 Realm 中。
+
+5、AuthenticationInfo，用户的角色信息集合，认证时使用。
+
+6、AuthorzationInfo，角色的权限信息集合，授权时使用。
+
+7、DefaultWebSecurityManager，安全管理器，开发者自定义的 Realm 需要注入到 DefaultWebSecurityManager 进行管理才能生效。
+
+8、ShiroFilterFactoryBean，过滤器工厂，Shiro 的基本运行机制是开发者定制规则，Shiro 去执行，具体的执行操作就是由 ShiroFilterFactoryBean 创建的一个个 Filter 对象来完成。
+
+## 四、整合SpringBoot项目实战
+
+1、自定义 Shiro 过滤器
+
+2、配置类
+
+编写认证和授权规则：
+
+> 认证过滤器
+
+anon：无需认证。
+
+authc：必须认证。
+
+authcBasic：需要通过 HTTPBasic 认证。
+
+user：不一定通过认证，只要曾经被 Shiro 记录即可，比如：记住我。
+
+> 授权过滤器
+
+perms：必须拥有某个权限才能访问。
+
+role：必须拥有某个角色才能访问。
+
+port：请求的端口必须是指定值才可以。
+
+rest：请求必须基于 RESTful，POST、PUT、GET、DELETE。
+
+ssl：必须是安全的 URL 请求，协议 HTTPS。
+
+创建 3 个页面，main.html、manage.html、administrator.html
+
+访问权限如下：
+
+1、必须登录才能访问 main.html
+
+2、当前用户必须拥有 manage 授权才能访问 manage.html
+
+3、当前用户必须拥有 administrator 角色才能访问 administrator.html
+
+> Shiro 整合 Thymeleaf
+
+配置类添加 ShiroDialect
+```java
+@Bean
+public ShiroDialect shiroDialect(){
+    return new ShiroDialect();
 }
+```
 
-~~~
+index.html
 
-`TestCustomerMd5RealmAuthenticator`
-~~~
-public class TestCustomerMd5RealmAuthenticator {
-    public static void main(String[] args) {
-        DefaultSecurityManager defaultSecurityManager = new DefaultSecurityManager();
-        CustomerMd5Realm realm = new CustomerMd5Realm();
-
-        /**
-            设置 realm 使用 hash 凭证匹配器
-        */
-        HashedCredentialsMatcher credentialsMatcher = new HashedCredentialsMatcher();
-        credentialsMatcher.setHashAlgorithmName("md5");
-        realm.setCredentialsMatcher(credentialsMatcher);
-
-        defaultSecurityManager.setRealm(realm);
-        SecurityUtils.setSecurityManager(defaultSecurityManager);
-        Subject subject = SecurityUtils.getSubject();
-
-        UsernamePasswordToken usernamePasswordToken = new UsernamePasswordToken("root", "123456");
-
-        try {
-            subject.login(usernamePasswordToken);
-            System.out.println("登录成功！");
-        } catch (UnknownAccountException e) {
-            e.printStackTrace();
-            System.out.println("用户名错误!");
-        } catch (IncorrectCredentialsException e) {
-            System.out.println("登录错误！");
-        }
-
-    }
-}
-
-~~~
-
- - 2、 MD5 + salt 的实现
-
-`CustomerMd5Realm`
-~~~
-public class CustomerMd5Realm extends AuthorizingRealm {
-    @Override
-    protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principalCollection) {
-        return null;
-    }
-
-    //认证
-    @Override
-    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authenticationToken) throws AuthenticationException {
-        String principal = (String) authenticationToken.getPrincipal();
-        if ("root".equals(principal)) {
-            return new SimpleAuthenticationInfo(principal,
-                    "e99a0dee78d3c1f71609cead42047675",
-                    ByteSource.Util.bytes("X0*7ps"),
-                    this.getName());
-        }
-
-        return null;
-    }
-}
-
-~~~
-
-`TestCustomerMd5RealmAuthenticator`
-~~~
-public class TestCustomerMd5RealmAuthenticator {
-    public static void main(String[] args) {
-        DefaultSecurityManager defaultSecurityManager = new DefaultSecurityManager();
-        CustomerMd5Realm realm = new CustomerMd5Realm();
-
-        /**
-            设置 realm 使用 hash 凭证匹配器
-        */
-        HashedCredentialsMatcher credentialsMatcher = new HashedCredentialsMatcher();
-        credentialsMatcher.setHashAlgorithmName("md5");
-        realm.setCredentialsMatcher(credentialsMatcher);
-
-        defaultSecurityManager.setRealm(realm);
-        SecurityUtils.setSecurityManager(defaultSecurityManager);
-        Subject subject = SecurityUtils.getSubject();
-
-        UsernamePasswordToken usernamePasswordToken = new UsernamePasswordToken("root", "123456");
-
-        try {
-            subject.login(usernamePasswordToken);
-            System.out.println("登录成功！");
-        } catch (UnknownAccountException e) {
-            e.printStackTrace();
-            System.out.println("用户名错误!");
-        } catch (IncorrectCredentialsException e) {
-            System.out.println("登录错误！");
-        }
-
-    }
-}
-
-~~~
-
-
- - 3、 MD5 + salt 1024次散列的实现
-
-`CustomerMd5Realm`
-~~~
-public class CustomerMd5Realm extends AuthorizingRealm {
-    @Override
-    protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principalCollection) {
-        return null;
-    }
-
-    //认证
-    @Override
-    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authenticationToken) throws AuthenticationException {
-        String principal = (String) authenticationToken.getPrincipal();
-        if ("root".equals(principal)) {
-            return new SimpleAuthenticationInfo(principal,
-                    "e99a0dee78d3c1f71609cead42047675",
-                    ByteSource.Util.bytes("X0*7ps"),
-                    this.getName());
-        }
-
-        return null;
-    }
-}
-
-~~~
-
-`TestCustomerMd5RealmAuthenticator`
-~~~
-public class TestCustomerMd5RealmAuthenticator {
-    public static void main(String[] args) {
-        DefaultSecurityManager defaultSecurityManager = new DefaultSecurityManager();
-        CustomerMd5Realm realm = new CustomerMd5Realm();
-
-        HashedCredentialsMatcher credentialsMatcher = new HashedCredentialsMatcher();
-        credentialsMatcher.setHashAlgorithmName("md5");
-        credentialsMatcher.setHashIterations(1024);
-        realm.setCredentialsMatcher(credentialsMatcher);
-
-        defaultSecurityManager.setRealm(realm);
-        SecurityUtils.setSecurityManager(defaultSecurityManager);
-        Subject subject = SecurityUtils.getSubject();
-
-        UsernamePasswordToken usernamePasswordToken = new UsernamePasswordToken("root", "123456");
-
-        try {
-            subject.login(usernamePasswordToken);
-            System.out.println("登录成功！");
-        } catch (UnknownAccountException e) {
-            e.printStackTrace();
-            System.out.println("用户名错误!");
-        } catch (IncorrectCredentialsException e) {
-            System.out.println("登录错误！");
-        }
-
-    }
-}
-
-~~~
-
-
-## 四、shiro 授权
-
-`CustomerMd5Realm`
-~~~
-public class CustomerMd5Realm extends AuthorizingRealm {
-    @Override
-    protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principalCollection) {
-        System.out.println("==============");
-        String primaryPrincipal = (String) principalCollection.getPrimaryPrincipal();
-        System.out.println("身份信息： " + primaryPrincipal);
-
-        SimpleAuthorizationInfo simpleAuthorizationInfo = new SimpleAuthorizationInfo();
-        simpleAuthorizationInfo.addRole("admin");
-        simpleAuthorizationInfo.addRole("user");
-
-        simpleAuthorizationInfo.addStringPermission("user:*:01");
-        simpleAuthorizationInfo.addStringPermission("product:create");
-
-        return simpleAuthorizationInfo;
-    }
-
-    @Override
-    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authenticationToken) throws AuthenticationException {
-        String principal = (String) authenticationToken.getPrincipal();
-        if ("root".equals(principal)) {
-            return new SimpleAuthenticationInfo(principal,
-                    "955224a95d4161ad8bd84f7ede979c02",
-                    ByteSource.Util.bytes("X0*7ps"),
-                    this.getName());
-        }
-
-        return null;
-    }
-}
-
-
-~~~
-
-`TestCustomerMd5RealmAuthenticator`
-~~~
-public class TestCustomerMd5RealmAuthenticator {
-    public static void main(String[] args) {
-        DefaultSecurityManager defaultSecurityManager = new DefaultSecurityManager();
-        CustomerMd5Realm realm = new CustomerMd5Realm();
-
-        HashedCredentialsMatcher credentialsMatcher = new HashedCredentialsMatcher();
-        credentialsMatcher.setHashAlgorithmName("md5");
-        credentialsMatcher.setHashIterations(1024);
-        realm.setCredentialsMatcher(credentialsMatcher);
-
-        defaultSecurityManager.setRealm(realm);
-        SecurityUtils.setSecurityManager(defaultSecurityManager);
-        Subject subject = SecurityUtils.getSubject();
-
-        /*
-        认证
-         */
-        UsernamePasswordToken usernamePasswordToken = new UsernamePasswordToken("root", "123456");
-
-        try {
-            subject.login(usernamePasswordToken);
-            System.out.println("登录成功！");
-        } catch (UnknownAccountException e) {
-            e.printStackTrace();
-            System.out.println("用户名错误!");
-        } catch (IncorrectCredentialsException e) {
-            System.out.println("登录错误！");
-        }
-
-        /*
-        授权
-         */
-        if (subject.isAuthenticated()) {
-            System.out.println(subject.hasRole("user"));
-            System.out.println(subject.hasAllRoles(Arrays.asList("admin", "user")));
-
-            boolean[] booleans = subject.hasRoles(Arrays.asList("admin", "super", "user"));
-            for (boolean aBoolean : booleans) {
-                System.out.println(aBoolean);
-            }
-
-            System.out.println("----------=========------------");
-            System.out.println("权限：" + subject.isPermitted("user:update:01"));
-            System.out.println("权限：" + subject.isPermitted("product:create:02"));
-
-            /*
-            分别具有权限
-             */
-            boolean[] permitted = subject.isPermitted("user:*:01", "order:*:10");
-            for (boolean b : permitted) {
-                System.out.println(b);
-            }
-            /*
-            同时具有权限
-             */
-            boolean permittedAll = subject.isPermittedAll("user:*:01", "product:*");
-            System.out.println(permittedAll);
-
-        }
-    }
-}
-
-~~~
-
-
-## 五、整合SpringBoot项目实战
-
+```html
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.thymeleaf.org/thymeleaf-extras-shiro">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="shortcut icon" href="#"/>
+</head>
+<body>
+    <h1>index</h1>
+    <div th:if="${session.account != null}">
+        <span th:text="${session.account.username}+'欢迎回来！'"></span><a href="/logout">退出</a>
+    </div>
+    <a href="/main">main</a> <br/>
+    <div shiro:hasPermission="manage">
+        <a href="manage">manage</a> <br/>
+    </div>
+    <div shiro:hasRole="administrator">
+        <a href="/administrator">administrator</a>
+    </div>
+</body>
+</html>
+```
